@@ -14,11 +14,11 @@ public class MainView extends SurfaceView {
 
     private Paint paint;
     private SurfaceHolder holder;
-    private Point m_vector, point;
+    private Point point;
 
     private Canvas canvas;
 
-    private float time, vx, vy;
+    private float v0x, v0y, vx, vy, vector_x, vector_y, k;
 
     public MainView(Context context) {
         super(context);
@@ -38,16 +38,16 @@ public class MainView extends SurfaceView {
     void init() {
         paint = new Paint();
         holder = getHolder();
-        m_vector = null;
     }
 
     void init(int x, int y, float v0x, float voy) {
-        vx = v0x / 100;
-        vy = voy / 100;
-        time = 0;
+        vx = this.v0x = v0x / 100;
+        vy = this.v0y = voy / 100;
+        k = 1;
         init();
-        m_vector = new Point(x / 100, y  / 100);
-        point = new Point(getWidth()/2, 50);
+        vector_x = x / 100f;
+        vector_y = y / 100f;
+        point = new Point(50, 50);
 
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.STROKE);
@@ -60,28 +60,54 @@ public class MainView extends SurfaceView {
             public void run() {
                 while (true) {
                     try {
-                        if(getWidth() > 0 && point.x <= 0) {
-                            point.x = getWidth()/2;
-                        } else {
-                            canvas = holder.lockCanvas();
-                            if (canvas != null) {
-                                canvas.drawColor(Color.WHITE);
-                                canvas.drawPoint(point.x, point.y, paint);
-                                holder.unlockCanvasAndPost(canvas);
-                            }
-                            vx += m_vector.x;
-                            vy += m_vector.y;
-                            point.x += vx;
-                            point.y += vy;
-                            Log.e("mylog", "vx: " + vx + ", vy: " + vy + ", x: " + point.x + ", y: " + point.y);
+                        canvas = holder.lockCanvas();
+                        if(canvas != null) {
+                            canvas.drawColor(Color.WHITE);
+                            canvas.drawPoint(point.x, point.y, paint);
+                            holder.unlockCanvasAndPost(canvas);
+                            break;
                         }
+                        holder.unlockCanvasAndPost(null);
                         Thread.sleep(10);
                     } catch (Exception e) {
-                        Log.e("mylog", e.toString());
+                        Log.e("mylog", "thread: " + e.toString());
                     }
                 }
             }
         }.start();
     }
 
+    void changeProgress(int progress) {
+        point.x = (int) ((v0x*progress + vector_x*progress*progress)*k + 50);
+        point.y = (int) ((v0y*progress + vector_y*progress*progress)*k + 50);
+        vx = (v0x + vector_x*progress)*k;
+        vy = (v0y + vector_y*progress)*k;
+        canvas = holder.lockCanvas();
+        if (canvas != null) {
+            canvas.drawColor(Color.WHITE);
+            canvas.drawPoint(point.x, point.y, paint);
+            paint.setStrokeWidth(5);
+            paint.setColor(Color.BLUE);
+            canvas.drawLine(point.x, point.y, point.x + vx*2, point.y + vy*2, paint);
+            paint.setStrokeWidth(100);
+            paint.setColor(Color.BLACK);
+            holder.unlockCanvasAndPost(canvas);
+        }
+    }
+
+    void plus() {
+        if(k >= 0.1)
+            k+=0.1;
+        else
+            k+=0.05;
+        Log.i("mylog", "k: " + k);
+    }
+
+    void minus() {
+        if(k > 0.1)
+            k-=0.1;
+        else
+            k-=0.05;
+        Log.i("mylog", "k: " + k);
+    }
 }

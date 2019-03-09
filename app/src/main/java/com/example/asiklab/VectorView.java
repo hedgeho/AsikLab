@@ -58,12 +58,16 @@ public class VectorView extends SurfaceView {
         new Thread() {
             @Override
             public void run() {
+                boolean boo = false;
                 while(true) {
                     try {
                         if(getWidth() > 0 && point.x <= 0) {
                             point.x = getWidth() / 2;
                             point.y = getHeight() / 2;
-                            Canvas canvas = holder.lockCanvas();
+                            boo = true;
+                        }
+                        canvas = holder.lockCanvas();
+                        if(canvas!=null && boo) {
                             canvas.drawColor(Color.WHITE);
                             paint.setStrokeWidth(100);
                             paint.setColor(Color.BLACK);
@@ -71,6 +75,7 @@ public class VectorView extends SurfaceView {
                             holder.unlockCanvasAndPost(canvas);
                             break;
                         }
+
                         Thread.sleep(50);
                     } catch (Exception e) {
                         Log.e("mylog", e.toString());
@@ -195,54 +200,7 @@ public class VectorView extends SurfaceView {
             m_vector.y = (int) sumy + point.y;
         }
         if(point.x > 0) {
-            canvas = holder.lockCanvas();
-            if(canvas!=null) {
-                canvas.drawColor(Color.WHITE);
-                paint.setStrokeWidth(100);
-                paint.setColor(Color.BLACK);
-                canvas.drawPoint(point.x, point.y, paint);
-                paint.setStrokeWidth(5);
-                for (Point vector: vectors) {
-                    if(vectors.indexOf(vector) == current_vector)
-                        paint.setColor(Color.RED);
-                    else
-                        paint.setColor(Color.BLACK);
-                    canvas.drawLine(point.x, point.y, vector.x, vector.y, paint);
-                }
-                if(m_vector != null) {
-                    paint.setColor(Color.BLUE);
-                    canvas.drawLine(point.x, point.y, m_vector.x, m_vector.y, paint);
-                }
-                holder.unlockCanvasAndPost(canvas);
-            }
-            if(current_vector == -1)
-                return true;
-            double length = Math.sqrt((vectors.get(current_vector).x - point.x)*(vectors.get(current_vector).x - point.x) +
-                    (vectors.get(current_vector).y - point.y)*(vectors.get(current_vector).y - point.y));
-            if(tv_length != null) {
-                tv_length.setText(String.format("length: %.4f", length));
-            }
-            if(tv_angle != null) {
-                double ang = Math.asin((vectors.get(current_vector).x - point.x) / length)* 180 / Math.PI;
-                if(vectors.get(current_vector).y - point.y > 0)
-                    ang = 180 - ang;
-                else if(ang < 0)
-                    ang = 360 + ang;
-                tv_angle.setText(String.format("angle: %.4f", ang));
-            }
-            double length1 = Math.sqrt((m_vector.x - point.x)*(m_vector.x - point.x) +
-                    (m_vector.y - point.y)*(m_vector.y - point.y));
-            if (tv_angle_b != null) {
-                double ang = Math.asin((m_vector.x - point.x) / length1)* 180 / Math.PI;
-                if(m_vector.y - point.y > 0)
-                    ang = 180 - ang;
-                else if(ang < 0)
-                    ang = 360 + ang;
-                tv_angle_b.setText(String.format("angle: %.4f", ang));
-            }
-            if (tv_length_b != null) {
-                tv_length_b.setText(String.format("length: %.4f", length));
-            }
+            draw();
         }
         return true;
     }
@@ -252,5 +210,72 @@ public class VectorView extends SurfaceView {
     }
     int gety() {
         return m_vector.y-point.y;
+    }
+
+    void draw() {
+        new Thread() {
+            @Override
+            public void run() {
+                while(true) {
+                    try {
+                        Thread.sleep(10);
+                        canvas = holder.lockCanvas();
+                        if (canvas != null) {
+                            canvas.drawColor(Color.WHITE);
+                            paint.setStrokeWidth(100);
+                            paint.setColor(Color.BLACK);
+                            canvas.drawPoint(point.x, point.y, paint);
+                            paint.setStrokeWidth(5);
+                            for (Point vector : vectors) {
+                                if (vectors.indexOf(vector) == current_vector)
+                                    paint.setColor(Color.RED);
+                                else
+                                    paint.setColor(Color.BLACK);
+                                canvas.drawLine(point.x, point.y, vector.x, vector.y, paint);
+                            }
+                            if (m_vector != null) {
+                                paint.setColor(Color.BLUE);
+                                canvas.drawLine(point.x, point.y, m_vector.x, m_vector.y, paint);
+                            }
+                            holder.unlockCanvasAndPost(canvas);
+                        } else {
+                            holder.unlockCanvasAndPost(null);
+                            continue;
+                        }
+                        if (current_vector == -1)
+                            break;
+                        double length = Math.sqrt((vectors.get(current_vector).x - point.x) * (vectors.get(current_vector).x - point.x) +
+                                (vectors.get(current_vector).y - point.y) * (vectors.get(current_vector).y - point.y));
+                        if (tv_length != null) {
+                            tv_length.setText(String.format("length: %.4f", length));
+                        }
+                        if (tv_angle != null) {
+                            double ang = Math.asin((vectors.get(current_vector).x - point.x) / length) * 180 / Math.PI;
+                            if (vectors.get(current_vector).y - point.y > 0)
+                                ang = 180 - ang;
+                            else if (ang < 0)
+                                ang = 360 + ang;
+                            tv_angle.setText(String.format("angle: %.4f", ang));
+                        }
+                        double length1 = Math.sqrt((m_vector.x - point.x) * (m_vector.x - point.x) +
+                                (m_vector.y - point.y) * (m_vector.y - point.y));
+                        if (tv_angle_b != null) {
+                            double ang = Math.asin((m_vector.x - point.x) / length1) * 180 / Math.PI;
+                            if (m_vector.y - point.y > 0)
+                                ang = 180 - ang;
+                            else if (ang < 0)
+                                ang = 360 + ang;
+                            tv_angle_b.setText(String.format("angle: %.4f", ang));
+                        }
+                        if (tv_length_b != null) {
+                            tv_length_b.setText(String.format("length: %.4f", length));
+                        }
+                        break;
+                    } catch (Exception e) {
+                        Log.e("mylog", e.toString());
+                    }
+                }
+            }
+        }.start();
     }
 }

@@ -10,11 +10,14 @@ import android.widget.TextView;
 
 public class VectorActivity extends AppCompatActivity {
 
+    static VectorView vectorView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vector);
-        final VectorView vectorView = findViewById(R.id.vector1);
+
+        vectorView = findViewById(R.id.vector1);
         vectorView.setViews((TextView) findViewById(R.id.tv_length),
                 (TextView) findViewById(R.id.tv_angle),
                 (TextView) findViewById(R.id.tv_length_b),
@@ -42,5 +45,11 @@ public class VectorActivity extends AppCompatActivity {
     }
     public static void log(String msg) {
         Log.e("mylog", msg);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        vectorView.draw();
     }
 }
